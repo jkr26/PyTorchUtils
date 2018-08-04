@@ -5,7 +5,7 @@ import datetime
 import pdb
 import math
 import torch.nn as nn
-import matplotlib.pyplot as pp
+import matplotlib.pyplot as plt
 
 use_cuda = torch.cuda.is_available()
 
@@ -24,24 +24,28 @@ def sgdr(period, batch_idx):
 def plot_lr_finder(model, criterion, data, batch_size):
     lr_list = []
     loss_list = []
-    lr = 1e-10
-    opt = nn.optim.SGD(lr=lr)
+    lr = 1e-15
+    opt = torch.optim.SGD(model.parameters(), lr=lr)
     m = np.Inf
     train, train_response = data[0], data[1]
     n = len(train)
-    c = 0
     t = 0
-    while t < 100*m:
-        lr_list.append(lr)
-        batch =  (torch.Tensor(train.loc[b % n:(b+batch_size) %  n, :].values), torch.Tensor(train_response.loc[b % n:(b+batch_size) % n].values))
-        b += batch_size
-        if use_cuda:
-            batch = (batch[0].cuda(), batch[1].cuda())
-        preds = model(batch[0].unsqueeze(1))
-        loss = criterion(output.squeeze(1), variables[1])
-        t = loss.item()
-        loss.backward()
-        opt.step()
+    n_iters = int(1e4)
+    while t < 2*m and lr < 100:
+        total_loss = 0
+        for b in range(0, n_iters, batch_size):
+            batch =  (torch.Tensor(train.loc[b % n:(b+batch_size) %  n, :].values), torch.Tensor(train_response.loc[b % n:(b+batch_size) % n].values))
+            if batch[0].size()[0] > 0:
+                if use_cuda:
+                    batch = (batch[0].cuda(), batch[1].cuda())
+                preds = model(batch[0].unsqueeze(1))
+                loss = criterion(preds.squeeze(1), batch[1])
+                total_loss += loss.item()
+                loss.backward()
+                opt.step()
+        t = total_loss/(n_iters/batch_size)
+        print(str(t))
+        lr_list.append(np.log10(lr))
         loss_list.append(t)
         lr = lr*2
         if t < m:
