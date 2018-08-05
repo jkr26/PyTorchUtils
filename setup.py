@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="pytorchutils_v0",
+    name="ptu",
     version="0.0.1",
     author="Keith Rush",
     author_email="j.keith.rush@gmail.com",
