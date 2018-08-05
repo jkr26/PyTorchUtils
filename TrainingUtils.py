@@ -84,7 +84,7 @@ def batchedTrainIters(name, n_iters, batch_size, print_every, model, optimizer, 
     """
     if use_cuda:
         model = model.cuda()
-    now = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+    now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
     writer = tensorboardX.SummaryWriter('/media/jkr/hdd1/TensorboardLogs/'+name+'/'+now)
     train, train_response = data[0][0], data[0][1]
     val, val_response = data[1][0], data[1][1]
