@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #import time
 import torch
+import torch.nn as nn
 from datetime import datetime
 #from numpy import random
 #import torch.nn as nn
@@ -20,6 +21,20 @@ Created on Mon May  7 19:02:45 2018
 use_cuda = torch.cuda.is_available()
 torch.backends.cudnn.enabled = True
 now = datetime.now()
+
+class qrStep(nn.Module):
+    def __init__(self):
+        super(qrStep, self).__init__()
+        
+    def _normalQrStep(curr):
+        #Compute QR decomposition
+        #Return 
+        pass
+    
+    def forward(init_map, op):
+        curr = torch.mm(init_map, op)
+        currQ = _normalQrStep(curr)
+        
 
 def to_np(x):
     return x.data.cpu().numpy()
@@ -46,7 +61,7 @@ def plot_lr_finder(model, criterion, data, batch_size):
     n = len(train)
     t = 0
     n_iters = int(1e4)
-    while t < 2*m and lr < 100:
+    while lr < 100:
         total_loss = 0
         for b in range(0, n_iters, batch_size):
             batch =  (torch.Tensor(train.loc[b % n:(b+batch_size) %  n, :].values), torch.Tensor(train_response.loc[b % n:(b+batch_size) % n].values))
