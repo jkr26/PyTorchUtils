@@ -24,7 +24,7 @@ now = datetime.now()
 
 class QRStep(nn.Module):
     """(One step of) the classical QR algorithm for eigenvector/eigenvalue
-    algorithm implemented in PyTorch.
+    computation implemented in PyTorch.
     """
     def __init__(self):
         super(QRStep, self).__init__()
@@ -33,13 +33,15 @@ class QRStep(nn.Module):
         """col assumed to be a 1d tensor, previous_cols
         a normalized list of 1d tensors
         """
+        to_subtract = torch.zeros(col.shape)
         for c in previous_cols:
-            col = col - torch.dot(col, c) * c
-        return col/torch.dot(col, col)
+            to_subtract = to_subtract + torch.dot(col, c) * c
+        col = col - to_subtract
+        return col/(torch.dot(col, col)**(1/2))
         
     def _normalQRStep(curr):
         #Compute Q via Gram-Schmidt
-        curr[:, 0] = curr[:, 0]/torch.dot(curr[:, 0], curr[:, 0])
+        curr[:, 0] = curr[:, 0]/(torch.dot(curr[:, 0], curr[:, 0])**(1/2))
         previous_cols = [curr[:, 0]]
         for k in range(1, curr.shape[1]):
             curr[:, k] = QRStep._GSStep(curr[:, k], previous_cols)
@@ -47,11 +49,15 @@ class QRStep(nn.Module):
         #Return Q
         return curr
     
-    def forward(init_map, op):
+    def forward(self, init_map, op):
+        """init_map should be the product of all the Qs computed thus far.
+        
+        op should be the operator we are looking to GD over
+        """
         #This is written under the assumption 
-        curr = torch.mm(init_map, op)
+        curr = torch.mm(torch.mm(init_map.permute(1, 0).contiguous(), op), init_map)
         currQ = QRStep._normalQRStep(curr)
-        return_map = torch.mm(currQ.permute(1, 0).contiguous(), init_map)
+        return_map = torch.mm(init_map, currQ)
         return return_map
 
 class implicitQRStep(nn.Module):
